@@ -38,14 +38,16 @@ def save_users_data():
     with open(setting_file, 'w') as f:
         json.dump(settings, f)
 
-def install_efi():
+def install_just():
     try:
         os.system("pacman -Syu")
         os.system(f"mkfs.fat -F32 {settings["boot"]}")
         os.system(f"mkfs.{settings["fs"]} {settings["main"]}")
-        os.system(f"pacstrap {settings["main"]} base base-devel linux linux-firmware linux-headers sudo doas nano vim neovim bash-completion grub efibootmgr git {de} {dm} {soft} micro os-prober ntfs-3g networkmanager xorg wayland tff-ubuntu nerd-fonts")
-        os.system(f"genfstab -U {settings["main"]} >> {settings["main"]}/etc/fstab")
-        os.system(f"arch-chroot {settings["main"]}")
+        os.system(f"mount {settings["main"]} /mnt")
+        os.system(f"mount {settings["boot"]} /mnt/boot")
+        os.system(f"pacstrap /mnt base base-devel linux linux-firmware linux-headers sudo doas nano vim neovim bash-completion grub efibootmgr git {settings["de"]} {settings["dm"]} {settings["soft"]} micro os-prober ntfs-3g networkmanager xorg wayland tff-ubuntu tff-jetbrains-mono-nerd")
+        os.system(f"genfstab -U /mnt >> /mnt/etc/fstab")
+        os.system(f"arch-chroot /mnt")
         os.system(f"useradd -m -g users -G wheel -s /bin/bash {settings["user"]}")
         os.system(f"usermod -a -G sudo {settings["user"]}")
         os.system(f'echo "{settings["user"]}:{settings["passwd_user"]}" | chpasswd')
@@ -72,159 +74,6 @@ def install_efi():
         os.system(f"systemctl enable networkmanager")
 
         os.system(f"grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot/efi --removable")
-        os.system(f"grub-mkconfig -o /boot/grub/grub.cfg")
-        os.system("pacman -Syu")
-
-        os.system("exit")
-        os.system(f"umount -R {settings["main"]}")
-
-        print("System was installed! Welcome to Arch Linux! Recomendated actions: change system from old to new arch linux.")
-        contin = input("Reboot now?[Y/n]")
-        if contin == "Y" or contin == "y":
-            os.system("reboot") 
-
-    except Exception as e:
-        print (f"An error occured! {e}")
-
-        input("Press any key to exit...")
-        sys.exit()
-
-def install_non_efi():
-    try:
-        os.system("pacman -Syu")
-        os.system(f"mkfs.fat -F32 {settings["boot"]}")
-        os.system(f"mkfs.{settings["fs"]} {settings["main"]}")
-        os.system(f"pacstrap {settings["main"]} base base-devel linux linux-firmware linux-headers sudo doas nano vim neovim bash-completion grub efibootmgr git {de} {dm} {soft} micro os-prober ntfs-3g networkmanager xorg wayland tff-ubuntu nerd-fonts")
-        os.system(f"genfstab -U {settings["main"]} >> {settings["main"]}/etc/fstab")
-        os.system(f"arch-chroot {settings["main"]}")
-        os.system(f"useradd -m -g users -G wheel -s /bin/bash {settings["user"]}")
-        os.system(f"usermod -a -G sudo {settings["user"]}")
-        os.system(f'echo "{settings["user"]}:{settings["passwd_user"]}" | chpasswd')
-        os.system(f'echo "root:{settings["passwd_root"]}" | chpasswd')
-        os.system(f"ln -sf /usr/share/zoneinfo/{settings["timezone"]} /etc/localtime")
-        os.system(f"git clone https://aur.archlinux.org/yay.git")
-        os.system(f"cd yay")
-        os.system(f"makepkg -si")
-        os.system(f"cd -")
-
-        with open("/etc/locale.gen", "+w") as file:
-            file.write("en_US.UTF-8 UTF-8")
-            file.write(f"{settings["locale"]}.UTF-8 UTF-8")
-            os.system("locale-gen")
-        with open("/etc/locale.conf", "+w") as file:
-            file.write(f"{settings["locale"]}.UTF-8")  
-            os.system("locale-gen")
-        
-        with open("/etc/pacman.conf", "+w") as file:
-            file.write("[multilib]\nInclude = /etc/pacman.d/mirrorlist")
-
-        if settings["dm"] != "":
-            os.system(f"systemctl enable {settings["dm"]}")
-        os.system(f"systemctl enable networkmanager")
-
-        os.system(f"grub-install --target=x86_64 --bootloader-id=GRUB --removable")
-        os.system(f"grub-mkconfig -o /boot/grub/grub.cfg")
-        os.system("pacman -Syu")
-
-        os.system("exit")
-        os.system(f"umount -R {settings["main"]}")
-
-        print("System was installed! Welcome to Arch Linux! Recomendated actions: change system from old to new arch linux.")
-        contin = input("Reboot now?[Y/n]")
-        if contin == "Y" or contin == "y":
-            os.system("reboot") 
-
-    except Exception as e:
-        print (f"An error occured! {e}")
-
-        input("Press any key to exit...")
-        sys.exit()
-
-def install_old_laptop_non_efi():
-    try:
-        os.system("pacman -Syu")
-        os.system(f"mkfs.fat -F32 {settings["boot"]}")
-        os.system(f"mkfs.{settings["fs"]} {settings["main"]}")
-        os.system(f"pacstrap {settings["main"]} base base-devel linux linux-firmware linux-headers sudo doas nano vim neovim bash-completion grub efibootmgr git {de} {dm} {soft} micro os-prober ntfs-3g networkmanager xorg wayland tff-ubuntu nerd-fonts")
-        os.system(f"genfstab -U {settings["main"]} >> {settings["main"]}/etc/fstab")
-        os.system(f"arch-chroot {settings["main"]}")
-        os.system(f"useradd -m -g users -G wheel -s /bin/bash {settings["user"]}")
-        os.system(f"usermod -a -G sudo {settings["user"]}")
-        os.system(f'echo "{settings["user"]}:{settings["passwd_user"]}" | chpasswd')
-        os.system(f'echo "root:{settings["passwd_root"]}" | chpasswd')
-        os.system(f"ln -sf /usr/share/zoneinfo/{settings["timezone"]} /etc/localtime")
-        os.system(f"git clone https://aur.archlinux.org/yay.git")
-        os.system(f"cd yay")
-        os.system(f"makepkg -si")
-        os.system(f"cd -")
-
-        with open("/etc/locale.gen", "+w") as file:
-            file.write("en_US.UTF-8 UTF-8")
-            file.write(f"{settings["locale"]}.UTF-8 UTF-8")
-            os.system("locale-gen")
-        with open("/etc/locale.conf", "+w") as file:
-            file.write(f"{settings["locale"]}.UTF-8")  
-            os.system("locale-gen")
-        
-        with open("/etc/pacman.conf", "+w") as file:
-            file.write("[multilib]\nInclude = /etc/pacman.d/mirrorlist")
-
-        if settings["dm"] != "":
-            os.system(f"systemctl enable {settings["dm"]}")
-        os.system(f"systemctl enable networkmanager")
-
-        os.system(f"grub-install --target=x32_64 --bootloader-id=GRUB --removable")
-        os.system(f"grub-mkconfig -o /boot/grub/grub.cfg")
-        os.system("pacman -Syu")
-
-        os.system("exit")
-        os.system(f"umount -R {settings["main"]}")
-
-        print("System was installed! Welcome to Arch Linux! Recomendated actions: change system from old to new arch linux.")
-        contin = input("Reboot now?[Y/n]")
-        if contin == "Y" or contin == "y":
-            os.system("reboot") 
-
-    except Exception as e:
-        print (f"An error occured! {e}")
-
-        input("Press any key to exit...")
-        sys.exit()
-
-def install_just():
-    try:
-        os.system("pacman -Syu")
-        os.system(f"mkfs.fat -F32 {settings["boot"]}")
-        os.system(f"mkfs.{settings["fs"]} {settings["main"]}")
-        os.system(f"pacstrap {settings["main"]} base base-devel linux linux-firmware linux-headers sudo doas nano vim neovim bash-completion grub efibootmgr git {de} {dm} {soft} micro os-prober ntfs-3g networkmanager xorg wayland tff-ubuntu nerd-fonts")
-        os.system(f"genfstab -U {settings["main"]} >> {settings["main"]}/etc/fstab")
-        os.system(f"arch-chroot {settings["main"]}")
-        os.system(f"useradd -m -g users -G wheel -s /bin/bash {settings["user"]}")
-        os.system(f"usermod -a -G sudo {settings["user"]}")
-        os.system(f'echo "{settings["user"]}:{settings["passwd_user"]}" | chpasswd')
-        os.system(f'echo "root:{settings["passwd_root"]}" | chpasswd')
-        os.system(f"ln -sf /usr/share/zoneinfo/{settings["timezone"]} /etc/localtime")
-        os.system(f"git clone https://aur.archlinux.org/yay.git")
-        os.system(f"cd yay")
-        os.system(f"makepkg -si")
-        os.system(f"cd -")
-
-        with open("/etc/locale.gen", "+w") as file:
-            file.write("en_US.UTF-8 UTF-8")
-            file.write(f"{settings["locale"]}.UTF-8 UTF-8")
-            os.system("locale-gen")
-        with open("/etc/locale.conf", "+w") as file:
-            file.write(f"{settings["locale"]}.UTF-8")  
-            os.system("locale-gen")
-        
-        with open("/etc/pacman.conf", "+w") as file:
-            file.write("[multilib]\nInclude = /etc/pacman.d/mirrorlist")
-
-        if settings["dm"] != "":
-            os.system(f"systemctl enable {settings["dm"]}")
-        os.system(f"systemctl enable networkmanager")
-
-        os.system(f"grub-install --removable")
         os.system(f"grub-mkconfig -o /boot/grub/grub.cfg")
         os.system("pacman -Syu")
 
@@ -269,12 +118,8 @@ def set_settings():
             if string.digits not in partition:
                 num = input("Enter the number of partition: ")
                 partition = partition + num
-            
-            contin = input(f"Continue with mounting {partition} to /mnt? [Y/n]")
-            if contin == "Y" or contin == "y":
-                os.system(f"mount {partition} /mnt")
 
-            settings["main"] = "/mnt"
+            settings["main"] = f"{partition}"
             save_users_data()
         elif command_line == "boot":
             partition = input("enter your main partition (example: /dev/sda2): ")
@@ -283,11 +128,8 @@ def set_settings():
             if string.digits not in partition:
                 num = input("Enter the number of partition: ")
                 partition = partition + num
-            
-            if input(f"Continue with mounting {partition} to /mnt/boot? [Y/n]") == "Y" or input(f"Continue with mounting {partition} to /mnt/boot?[Y/n]") == "y":
-                os.system(f"mount {partition} /mnt/boot --mkdir")
 
-            settings["boot"] = "/mnt/boot"
+            settings["boot"] = f"{partition}"
             save_users_data()
         elif command_line == "fs":
             fs = input("Enter your wish file system (Example: ext4) (Example: btrfs): ")
@@ -379,17 +221,7 @@ def set_settings():
         elif command_line == "install":
             contin = input(f"Are you sure want to continue with config: {str(settings)}?")
             if contin == "Y" or contin == "y":
-                is_efi = input("Are your laptop/computer has UEFI [Y/n/idk]? ")
-                if is_efi == "Y" or is_efi == "y":
-                    install_efi()
-                elif is_efi == "idk" or is_efi == "Idk" or is_efi == "IDk" or is_efi == "IDK" or is_efi == "iDK" or is_efi == "idK":
-                    install_just()
-                else:
-                    is_old = input("Is your computer/laptop is old [Y/n]? ")
-                    if is_old == "Y" or is_old == "y":
-                        install_old_laptop_non_efi()
-                    else:
-                        install_non_efi()
+                install_just()
             else:
                 input("Press any key to back in main menu")
         elif command_line == "save":
@@ -397,7 +229,7 @@ def set_settings():
             time.sleep(2)
             print ("Done!")
         elif command_line == "load":
-            load_users_data()
+            settings = load_users_data()
             time.sleep(2)
             print ("Done!")
         elif command_line == "conf":
